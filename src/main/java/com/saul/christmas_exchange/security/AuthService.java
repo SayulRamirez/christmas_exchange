@@ -53,6 +53,7 @@ public class AuthService {
         if (participantRepository.existsByUsername(request.username())) throw new EntityExistsException("El usuario ya existe");
 
         participantRepository.save(new Participant(null,
+                request.name(),
                 request.username(),
                 passwordEncoder.encode(request.password()),
                 false));

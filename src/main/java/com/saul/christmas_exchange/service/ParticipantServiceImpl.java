@@ -68,6 +68,6 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     private ParticipantResponse toResponse(Participant entity) {
-        return new ParticipantResponse(entity.getIdParticipant(), entity.getUsername());
+        return new ParticipantResponse(entity.getIdParticipant(), entity.getName());
     }
 }

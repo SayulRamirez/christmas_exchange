@@ -17,6 +17,9 @@ public class Participant implements UserDetails {
     @Column(name = "id_participant")
     private Integer idParticipant;
 
+    @Column(length = 100)
+    private String name;
+
     @Column(unique = true, nullable = false, length = 100)
     private String username;
 
@@ -31,8 +34,9 @@ public class Participant implements UserDetails {
 
     public Participant() {}
 
-    public Participant(Integer idParticipant, String username, String password, boolean selected) {
+    public Participant(Integer idParticipant, String name, String username, String password, boolean selected) {
         this.idParticipant = idParticipant;
+        this.name = name;
         this.username = username;
         this.password = password;
         this.selected = selected;
@@ -45,6 +49,14 @@ public class Participant implements UserDetails {
 
     public void setIdParticipant(Integer idParticipant) {
         this.idParticipant = idParticipant;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUsername() {
