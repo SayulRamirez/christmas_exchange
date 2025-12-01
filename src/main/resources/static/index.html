@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Intercambio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.png">
+</head>
+<body>
+    <div id="divLogin" class="container-fluid mb-5 d-none">
+        <div class="container-md d-flex align-items-center flex-column mt-5">
+            <h1 class="text-center">Inicia sesión y descubre a quien le regalaras</h1>
+            <div id="alertLogin" class="alert alert-danger d-flex align-items-center opacity-0" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div id="info-login" class="ms-3">Usuario o contraseña incorrectos</div>
+            </div>
+            <form class="col-12 col-md-10 d-flex flex-column gap-5 mt-3 align-items-center" novalidate onsubmit="login">
+                <div class="col-12 col-md-10 position-relative">
+                    <label for="loginUsername" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="loginUsername" value="" required>
+                </div>
+                <div class="col-12 col-md-10 position-relative">
+                    <label for="loginPassword" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="loginPassword" value="" required>
+                </div>
+                <div>
+                    <button id="btnLogin" class="btn btn-primary" type="button">Inicia sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <hr class="w-75 my-5 mx-auto">
+    <div id="divRegister" class="container-fluid mb-5 d-none">
+        <div class="container-md d-flex align-items-center flex-column mt-5">
+            <h1>Registrarse para el intercambio</h1>
+            <div style="min-height: 74px">
+                <div id="registerSuccess" class="alert alert-success d-flex align-items-center d-none" role="alert">
+                    <i class="bi bi-hand-thumbs-up-fill"></i>
+                    <div class="ms-3">Registro exitoso</div>
+                </div>
+                <div id="registerConflict" class="alert alert-danger d-flex align-items-center d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div class="ms-3">El usuario ya esta registrado</div>
+                </div>
+            </div>
+
+            <form class="needs-validation col-12 col-md-10 d-flex flex-column gap-5 mt-3 align-items-center" novalidate>
+                <div class="col-12 col-md-10 position-relative">
+                    <label for="name" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="name" value="" pattern="^[A-Za-z ]+$" minlength="3" maxlength="100" required>
+                    <div class="invalid-tooltip" data-id="name"></div>
+                </div>
+                <div class="col-12 col-md-10 position-relative">
+                    <label for="username" class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="username" value="" pattern="^[A-Za-z0-9]+$" minlength="3" maxlength="20" required>
+                    <div class="invalid-tooltip" data-id="username"></div>
+                </div>
+                <div class="col-12 col-md-10 position-relative">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="text" class="form-control" id="password" value="" pattern="^[A-Za-z0-9@#$%&*!]+$" minlength="8" maxlength="15" required>
+                    <div class="invalid-tooltip" data-id="password"></div>
+                </div>
+                <div>
+                    <button id="btnRegister" class="btn btn-primary" type="button">Registrarse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script>
+
+        fetch('/auth/status', {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'GET',
+        }).then(response => response.json())
+            .then(response => {
+                if (response.status) {
+                    document.getElementById('divLogin').classList.remove('d-none');
+                } else {
+                    document.getElementById('divRegister').classList.remove('d-none');
+                }
+            });
+
+        function login(event) {
+            event.preventDefault();
+            document.getElementById("alertLogin").classList.remove("opacity-1");
+            const loginUsername = document.getElementById("loginUsername").value;
+            const loginPassword = document.getElementById("loginPassword").value;
+
+            const payload = {username: loginUsername, password: loginPassword};
+
+            fetch("/auth/login", {
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                method: "POST",
+                body: JSON.stringify(payload),
+            })
+                .then(response => {
+                    console.log(response)
+                    if (response.status === 200) {
+                        return response.json();
+                    }
+
+                    if (response.status === 403) {
+                        document.getElementById("alertLogin").classList.remove("opacity-0");
+                        return null;
+                    }
+                })
+                .then(data => {
+                    if (data && data.token) {
+                        localStorage.setItem("token", data.token);
+                        localStorage.setItem("idParticipant", data.id);
+                        window.location.href = "exchange.html";
+                    }
+                })
+
+        }
+
+        document.getElementById("btnLogin").addEventListener('click', login);
+
+        const form = document.querySelector('.needs-validation');
+
+        const tooltip = Array.from(document.querySelectorAll(".invalid-tooltip"));
+
+        const registerSuccess = document.getElementById("registerSuccess");
+        const registerConflict = document.getElementById("registerConflict");
+
+        function validName(name) {
+            name = name.trim();
+
+            let response = {valid: true, field: name};
+
+            if (name === '') {
+                response.content = 'El campo no debe de estar vacío';
+                response.valid = false;
+                return response;
+            }
+
+            if (name.length > 100 || name.length <= 3) {
+                response.content = 'El nombre debe de tener entre 3 y 100 carácteres';
+                response.valid = false;
+                return response;
+            }
+
+            let regex = /^[A-Za-z ]+$/;
+
+            if (!regex.test(name)) {
+                response.content = 'Solo letras';
+                response.valid = false;
+                return response;
+            }
+
+            return response;
+        }
+
+        function validUsername(name) {
+            name = name.trim();
+
+            let response = {valid: true, field: name};
+
+            if (name === '') {
+                response.content = 'El campo no debe de estar vacío';
+                response.valid = false;
+                return response;
+            }
+
+            if (name.length > 20 || name.length <= 3) {
+                response.content = 'El usuario debe de tener entre 3 y 20 carácteres';
+                response.valid = false;
+                return response;
+            }
+
+            let regex = /^[A-Za-z0-9]+$/;
+
+            if (!regex.test(name)) {
+                response.content = 'Solo letras y números';
+                response.valid = false;
+                return response;
+            }
+
+            return response;
+        }
+
+        function validPassword(password) {
+            password = password.trim();
+
+            let response = {valid: true, field: password};
+
+            if (password === '') {
+                response.content = 'El campo no debe de estar vacío';
+                response.valid = false;
+                return response;
+            }
+
+            if (password.length > 15 || password.length <= 7) {
+                response.content = 'La contraseña debe de tener entre 7 y 15 carácteres';
+                response.valid = false;
+                return response;
+            }
+
+            let regex = /^[A-Za-z0-9@#$%&*!]+$/;
+
+            if (!regex.test(password)) {
+                response.content = 'Solo números, letras y @#$%&*!';
+                response.valid = false;
+                return response;
+            }
+
+            return response;
+        }
+
+        function register(event) {
+            event.preventDefault();
+            cleanAlertRegister();
+
+            const name = validName(document.getElementById("name").value);
+            const username = validUsername(document.getElementById("username").value);
+            const password = validPassword(document.getElementById("password").value);
+
+            if (!name.valid) {
+                tooltip.find(tool => tool.dataset.id === 'name').textContent = name.content;
+            }
+
+            if (!username.valid) {
+                tooltip.find(tool => tool.dataset.id === 'username').textContent = username.content;
+            }
+
+            if (!password.valid) {
+                tooltip.find(tool => tool.dataset.id === 'password').textContent = password.content;
+            }
+
+            form.classList.add('was-validated');
+
+            if (name.valid && username.valid && password.valid) {
+                const payload = {
+                    name: name.field,
+                    username: username.field,
+                    password: password.field
+                };
+
+                fetch("/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                })
+                    .then(response => {
+                        console.log(response.status === 409)
+                        if (response.status === 200) {
+                            registerSuccess.classList.add("d-flex");
+                            registerSuccess.classList.remove("d-none");
+                            form.classList.remove('was-validated');
+                            form.reset();
+                        } else if (response.status === 409) {
+                            registerConflict.classList.remove("d-none");
+                        }
+                    })
+                    .catch(error => console.error("Error en fetch:", error));
+            }
+        }
+
+        function cleanAlertRegister() {
+            registerConflict.classList.add("d-none");
+            registerSuccess.classList.add("d-none");
+
+            registerConflict.classList.remove("d-flex");
+            registerSuccess.classList.remove("d-flex");
+        }
+
+        document.getElementById("btnRegister").addEventListener('click', register);
+    </script>
+</body>
+</html>

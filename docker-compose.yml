@@ -1,0 +1,37 @@
+services:
+  postgresql_db:
+    image: postgres:15
+    container_name: postgresql_db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: christmas_exchange
+    ports:
+      - "5432:5432"
+    volumes:
+      - data_sql:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d christmas_exchange" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    mem_limit: 512m
+    container_name: christmas_exchange_app
+    restart: always
+    depends_on:
+      postgresql_db:
+        condition: service_healthy
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      LOGIN_START: ${LOGIN_START}
+    ports:
+      - "8080:8080"
+
+volumes:
+  data_sql:

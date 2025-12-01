@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Intercambio Familiar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/favicon.png">
+    <style>
+        .card-container {
+            perspective: 1000px;
+        }
+
+        .card-flip {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 1s;
+            transform-style: preserve-3d;
+        }
+
+        .flipped .card-flip {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: .5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .card-front {
+            background-color: #dc3545; /* rojo navideño */
+            color: white;
+        }
+
+        .card-back {
+            background-color: #198754; /* verde navideño */
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-5 text-center">
+        <h1 class="mb-4 text-danger">🎄 Intercambio Familiar 🎁</h1>
+        <div id="selected" class="container-fluid g-4 d-flex flex-wrap justify-content-center gap-3"></div>
+        <div id="participants" class="container-fluid g-4 d-flex flex-wrap justify-content-center gap-3"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const idGiver = localStorage.getItem('idParticipant');
+        const token = localStorage.getItem('token');
+
+        function flipCard(element) {
+            if (!element.classList.contains("flipped")) {
+
+                document.querySelectorAll('.col-12.col-sm-6.col-md-4.col-lg-3').forEach(d => {
+                    const div = document.getElementById('participants');
+                    const card = d.querySelector('.card-container');
+                    if (card.dataset.id !== element.dataset.id) {
+                        div.removeChild(d);
+                    }
+                });
+
+                setTimeout(() => {
+                    element.classList.add("flipped");
+
+                    fetch(`/participant/${idGiver}/assign/${element.dataset.id}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        method: 'POST'
+                    }).then(response => {
+                        console.log(response.status);
+                        return response.json();
+                    }).then(response => console.log(response));
+                }, 500)
+            }
+        }
+
+        function divCard() {
+            const col = document.createElement("div");
+            col.className = "col-12 col-sm-6 col-md-4 col-lg-3";
+            col.style.height = "48px";
+            return col;
+        }
+
+        function getReceiver() {
+            fetch(`/participant/${idGiver}/receiver`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                method: "GET"
+            }).then(response => response.json())
+                .then(response => {
+                    const col = divCard();
+
+                    col.innerHTML = `<div class="card-container flipped">
+                                        <div class="card-flip">
+                                            <div class="card-front p-4"></div>
+                                            <div class="card-back p-4">Le regalaras a: ${response.name}</div>
+                                        </div>
+                                    </div>`;
+
+                    document.getElementById('selected').appendChild(col);
+                });
+        }
+
+        function getAll() {
+            const participants = document.getElementById('participants');
+
+            fetch(`/participant/${idGiver}/options`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                method: 'GET',
+            }).then(response => response.json())
+                .then(response => {
+                    participants.innerHTML = "";
+
+                    response.forEach(participant => {
+                        const col = divCard();
+
+                        col.innerHTML = `<div class="card-container" data-id="${participant.id}">
+                                            <div class="card-flip">
+                                                <div class="card-front p-4">Haz clic</div>
+                                                <div class="card-back p-4">${participant.name}</div>
+                                            </div>
+                                         </div>`;
+
+                        col.querySelector(".card-container").addEventListener("click", function () {
+                            flipCard(this);
+                        });
+
+                        participants.appendChild(col);
+                    });
+                });
+        }
+
+
+        fetch(`/participant/assigned/${idGiver}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            method: 'GET',
+        }).then(response => response.json())
+            .then(response => {
+                if (response.assigned) {
+                    getReceiver()
+                } else {
+                    getAll();
+                }
+            });
+    </script>
+</body>
+</html>
