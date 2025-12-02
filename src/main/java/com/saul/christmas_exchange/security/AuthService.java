@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -49,6 +50,7 @@ public class AuthService {
         return new AuthResponse(token, user.getIdParticipant());
     }
 
+    @Transactional
     public void register(RegisterRequest request) {
         if (participantRepository.existsByUsername(request.username())) throw new EntityExistsException("El usuario ya existe");
 
