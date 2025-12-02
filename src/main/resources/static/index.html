@@ -78,9 +78,9 @@
         }).then(response => response.json())
             .then(response => {
                 if (response.status) {
-                    document.getElementById('divLogin').classList.remove('d-none');
-                } else {
                     document.getElementById('divRegister').classList.remove('d-none');
+                } else {
+                    document.getElementById('divLogin').classList.remove('d-none');
                 }
             });
 

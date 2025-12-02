@@ -15,4 +15,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Intege
     Optional<Participant> findByUsername(String username);
 
     boolean existsByUsername(String username);
+
+    int countBySelectedIsFalse(Integer giver);
 }
