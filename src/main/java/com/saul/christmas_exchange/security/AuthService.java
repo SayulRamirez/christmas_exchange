@@ -7,17 +7,15 @@ import com.saul.christmas_exchange.model.RegisterRequest;
 import com.saul.christmas_exchange.repository.ParticipantRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.chrono.ChronoZonedDateTime;
 import java.util.Map;
 
 @Service
@@ -30,6 +28,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     private final AuthenticationManager authenticationManager;
+
+    @Value(value = "${login.start}")
+    private ZonedDateTime loginStart;
 
     public AuthService(ParticipantRepository participantRepository, JwtService jwtService, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.participantRepository = participantRepository;
@@ -65,12 +66,7 @@ public class AuthService {
     public Map<String, Boolean> status() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Mexico_City"));
 
-        ZonedDateTime startLogin = ZonedDateTime.of(
-                2025, 12, 4, 9, 0, 0, 0,
-                ZoneId.of("America/Mexico_City")
-        );
-
-        boolean loginEnabled = now.isAfter(startLogin);
+        boolean loginEnabled = now.isAfter(loginStart);
 
         return Map.of("status", loginEnabled);
     }
